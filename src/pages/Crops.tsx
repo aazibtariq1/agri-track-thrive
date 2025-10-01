@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import CropFinancialCard from "@/components/CropFinancialCard";
 
 interface Crop {
   id: string;
@@ -226,7 +227,7 @@ export default function Crops() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="market_price">Market Price ($)</Label>
+                    <Label htmlFor="market_price">Market Price (PKR/kg)</Label>
                     <Input
                       id="market_price"
                       type="number"
@@ -314,12 +315,15 @@ export default function Crops() {
                   )}
                   {crop.market_price && (
                     <div className="flex items-center text-sm font-semibold text-primary">
-                      ${crop.market_price}/kg
+                      PKR {crop.market_price}/kg
                     </div>
                   )}
                   {crop.notes && (
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{crop.notes}</p>
                   )}
+                  <div className="mt-4">
+                    <CropFinancialCard cropId={crop.id} cropName={crop.crop_name} />
+                  </div>
                 </CardContent>
               </Card>
             ))}

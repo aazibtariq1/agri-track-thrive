@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingDown } from "lucide-react";
+import { Plus, TrendingDown, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -19,6 +19,12 @@ interface Expense {
   amount: number;
   description: string | null;
   expense_date: string;
+  crop_id: string | null;
+}
+
+interface Crop {
+  id: string;
+  crop_name: string;
 }
 
 const categories = [
@@ -36,6 +42,7 @@ const categories = [
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -43,6 +50,7 @@ export default function Expenses() {
     amount: "",
     description: "",
     expense_date: new Date().toISOString().split("T")[0],
+    crop_id: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,12 +58,35 @@ export default function Expenses() {
   useEffect(() => {
     checkAuth();
     loadExpenses();
+    loadCrops();
   }, []);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
+    }
+  };
+
+  const loadCrops = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("crops")
+        .select("id, crop_name")
+        .eq("user_id", user.id)
+        .order("crop_name");
+
+      if (error) throw error;
+      setCrops(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading crops",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -96,6 +127,7 @@ export default function Expenses() {
           amount: parseFloat(formData.amount),
           description: formData.description || null,
           expense_date: formData.expense_date,
+          crop_id: formData.crop_id || null,
         },
       ]);
 
@@ -103,7 +135,7 @@ export default function Expenses() {
 
       toast({
         title: "Expense added successfully",
-        description: `$${formData.amount} expense recorded.`,
+        description: `PKR ${formData.amount} expense recorded.`,
       });
 
       setOpen(false);
@@ -112,11 +144,31 @@ export default function Expenses() {
         amount: "",
         description: "",
         expense_date: new Date().toISOString().split("T")[0],
+        crop_id: "",
       });
       loadExpenses();
     } catch (error: any) {
       toast({
         title: "Error adding expense",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("expenses").delete().eq("id", id);
+      if (error) throw error;
+
+      toast({
+        title: "Expense deleted",
+        description: "Expense record removed successfully.",
+      });
+      loadExpenses();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting expense",
         description: error.message,
         variant: "destructive",
       });
@@ -172,7 +224,7 @@ export default function Expenses() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ($) *</Label>
+                  <Label htmlFor="amount">Amount (PKR) *</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -191,6 +243,22 @@ export default function Expenses() {
                     onChange={(e) => setFormData({ ...formData, expense_date: e.target.value })}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="crop_id">Crop (Optional)</Label>
+                  <Select value={formData.crop_id} onValueChange={(value) => setFormData({ ...formData, crop_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a crop" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {crops.map((crop) => (
+                        <SelectItem key={crop.id} value={crop.id}>
+                          {crop.crop_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
@@ -214,7 +282,7 @@ export default function Expenses() {
               Total Expenses
             </CardTitle>
             <CardDescription className="text-3xl font-bold text-destructive">
-              ${totalExpenses.toFixed(2)}
+              PKR {totalExpenses.toFixed(2)}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -243,8 +311,10 @@ export default function Expenses() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Category</TableHead>
+                    <TableHead>Crop</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -252,8 +322,18 @@ export default function Expenses() {
                     <TableRow key={expense.id}>
                       <TableCell>{new Date(expense.expense_date).toLocaleDateString()}</TableCell>
                       <TableCell className="capitalize">{expense.category}</TableCell>
+                      <TableCell>{crops.find(c => c.id === expense.crop_id)?.crop_name || "-"}</TableCell>
                       <TableCell>{expense.description || "-"}</TableCell>
-                      <TableCell className="text-right font-medium">${Number(expense.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-medium">PKR {Number(expense.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(expense.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

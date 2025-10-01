@@ -111,7 +111,7 @@ export default function Reports() {
               <TrendingUp className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">${stats.totalIncome.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-primary">PKR {stats.totalIncome.toFixed(2)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -120,7 +120,7 @@ export default function Reports() {
               <TrendingDown className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">${stats.totalExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-destructive">PKR {stats.totalExpenses.toFixed(2)}</div>
             </CardContent>
           </Card>
           <Card>
@@ -130,7 +130,7 @@ export default function Reports() {
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${stats.netProfit >= 0 ? "text-primary" : "text-destructive"}`}>
-                ${stats.netProfit.toFixed(2)}
+                PKR {stats.netProfit.toFixed(2)}
               </div>
             </CardContent>
           </Card>

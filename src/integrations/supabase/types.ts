@@ -75,6 +75,7 @@ export type Database = {
           amount: number
           category: string
           created_at: string | null
+          crop_id: string | null
           description: string | null
           expense_date: string
           id: string
@@ -84,6 +85,7 @@ export type Database = {
           amount: number
           category: string
           created_at?: string | null
+          crop_id?: string | null
           description?: string | null
           expense_date?: string
           id?: string
@@ -93,12 +95,20 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string | null
+          crop_id?: string | null
           description?: string | null
           expense_date?: string
           id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "expenses_crop_id_fkey"
+            columns: ["crop_id"]
+            isOneToOne: false
+            referencedRelation: "crops"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expenses_user_id_fkey"
             columns: ["user_id"]

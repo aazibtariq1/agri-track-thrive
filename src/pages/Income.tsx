@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp } from "lucide-react";
+import { Plus, TrendingUp, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -19,6 +19,12 @@ interface Income {
   amount: number;
   description: string | null;
   income_date: string;
+  crop_id: string | null;
+}
+
+interface Crop {
+  id: string;
+  crop_name: string;
 }
 
 const sources = [
@@ -31,6 +37,7 @@ const sources = [
 
 export default function Income() {
   const [income, setIncome] = useState<Income[]>([]);
+  const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -38,6 +45,7 @@ export default function Income() {
     amount: "",
     description: "",
     income_date: new Date().toISOString().split("T")[0],
+    crop_id: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -45,12 +53,35 @@ export default function Income() {
   useEffect(() => {
     checkAuth();
     loadIncome();
+    loadCrops();
   }, []);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
+    }
+  };
+
+  const loadCrops = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("crops")
+        .select("id, crop_name")
+        .eq("user_id", user.id)
+        .order("crop_name");
+
+      if (error) throw error;
+      setCrops(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading crops",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -91,6 +122,7 @@ export default function Income() {
           amount: parseFloat(formData.amount),
           description: formData.description || null,
           income_date: formData.income_date,
+          crop_id: formData.crop_id || null,
         },
       ]);
 
@@ -98,7 +130,7 @@ export default function Income() {
 
       toast({
         title: "Income added successfully",
-        description: `$${formData.amount} income recorded.`,
+        description: `PKR ${formData.amount} income recorded.`,
       });
 
       setOpen(false);
@@ -107,11 +139,31 @@ export default function Income() {
         amount: "",
         description: "",
         income_date: new Date().toISOString().split("T")[0],
+        crop_id: "",
       });
       loadIncome();
     } catch (error: any) {
       toast({
         title: "Error adding income",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("income").delete().eq("id", id);
+      if (error) throw error;
+
+      toast({
+        title: "Income deleted",
+        description: "Income record removed successfully.",
+      });
+      loadIncome();
+    } catch (error: any) {
+      toast({
+        title: "Error deleting income",
         description: error.message,
         variant: "destructive",
       });
@@ -167,7 +219,7 @@ export default function Income() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ($) *</Label>
+                  <Label htmlFor="amount">Amount (PKR) *</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -186,6 +238,22 @@ export default function Income() {
                     onChange={(e) => setFormData({ ...formData, income_date: e.target.value })}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="crop_id">Crop (Optional)</Label>
+                  <Select value={formData.crop_id} onValueChange={(value) => setFormData({ ...formData, crop_id: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a crop" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {crops.map((crop) => (
+                        <SelectItem key={crop.id} value={crop.id}>
+                          {crop.crop_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
@@ -209,7 +277,7 @@ export default function Income() {
               Total Income
             </CardTitle>
             <CardDescription className="text-3xl font-bold text-primary">
-              ${totalIncome.toFixed(2)}
+              PKR {totalIncome.toFixed(2)}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -238,8 +306,10 @@ export default function Income() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Source</TableHead>
+                    <TableHead>Crop</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -249,8 +319,18 @@ export default function Income() {
                       <TableCell className="capitalize">
                         {inc.source.split("_").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}
                       </TableCell>
+                      <TableCell>{crops.find(c => c.id === inc.crop_id)?.crop_name || "-"}</TableCell>
                       <TableCell>{inc.description || "-"}</TableCell>
-                      <TableCell className="text-right font-medium text-primary">${Number(inc.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-medium text-primary">PKR {Number(inc.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(inc.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

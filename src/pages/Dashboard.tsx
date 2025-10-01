@@ -117,17 +117,17 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Income"
-            value={`$${stats.totalIncome.toFixed(2)}`}
+            value={`PKR ${stats.totalIncome.toFixed(2)}`}
             icon={TrendingUp}
           />
           <StatCard
             title="Total Expenses"
-            value={`$${stats.totalExpenses.toFixed(2)}`}
+            value={`PKR ${stats.totalExpenses.toFixed(2)}`}
             icon={TrendingDown}
           />
           <StatCard
             title="Net Profit"
-            value={`$${stats.netProfit.toFixed(2)}`}
+            value={`PKR ${stats.netProfit.toFixed(2)}`}
             icon={DollarSign}
             trend={{
               value: stats.netProfit >= 0 ? "Profitable" : "Loss",
