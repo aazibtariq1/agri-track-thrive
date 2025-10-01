@@ -241,12 +241,11 @@ export default function Income() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="crop_id">Crop (Optional)</Label>
-                  <Select value={formData.crop_id} onValueChange={(value) => setFormData({ ...formData, crop_id: value })}>
+                  <Select value={formData.crop_id || undefined} onValueChange={(value) => setFormData({ ...formData, crop_id: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a crop" />
+                      <SelectValue placeholder="Select a crop (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
                       {crops.map((crop) => (
                         <SelectItem key={crop.id} value={crop.id}>
                           {crop.crop_name}
