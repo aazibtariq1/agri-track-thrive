@@ -166,6 +166,54 @@ export type Database = {
           },
         ]
       }
+      inventory: {
+        Row: {
+          category: string
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          item_name: string
+          minimum_stock: number
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          quantity: number
+          unit: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          item_name: string
+          minimum_stock?: number
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          quantity?: number
+          unit?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          item_name?: string
+          minimum_stock?: number
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          quantity?: number
+          unit?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
