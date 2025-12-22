@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Plus, Trash2, AlertTriangle, Package, Leaf, FlaskConical, Droplets } from "lucide-react";
+import { getUserFriendlyError } from "@/lib/error-handler";
+import { inventorySchema, formatValidationError } from "@/lib/validation-schemas";
 
 interface InventoryItem {
   id: string;
@@ -80,7 +82,8 @@ export default function Inventory() {
       if (error) throw error;
       setInventory(data || []);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error('Fetch inventory error:', error);
+      toast({ title: "Error", description: getUserFriendlyError(error), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -89,6 +92,28 @@ export default function Inventory() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validate input
+      const validationResult = inventorySchema.safeParse({
+        item_name: formData.item_name,
+        category: formData.category,
+        quantity: parseFloat(formData.quantity),
+        unit: formData.unit,
+        minimum_stock: parseFloat(formData.minimum_stock),
+        purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : undefined,
+        purchase_date: formData.purchase_date || undefined,
+        expiry_date: formData.expiry_date || undefined,
+        notes: formData.notes || undefined,
+      });
+
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: formatValidationError(validationResult.error),
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -122,7 +147,8 @@ export default function Inventory() {
       });
       fetchInventory();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error('Add inventory error:', error);
+      toast({ title: "Error", description: getUserFriendlyError(error), variant: "destructive" });
     }
   };
 
@@ -133,7 +159,8 @@ export default function Inventory() {
       toast({ title: "Success", description: "Item deleted" });
       fetchInventory();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error('Delete inventory error:', error);
+      toast({ title: "Error", description: getUserFriendlyError(error), variant: "destructive" });
     }
   };
 
