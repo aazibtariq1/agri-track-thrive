@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sprout } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyError } from "@/lib/error-handler";
+import { authSchema, formatValidationError } from "@/lib/validation-schemas";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -41,6 +43,24 @@ export default function Auth() {
     setLoading(true);
 
     try {
+      // Validate input before sending to backend
+      const validationResult = authSchema.safeParse({
+        email,
+        password,
+        fullName: isSignUp ? fullName : undefined,
+        farmName: isSignUp ? farmName : undefined,
+      });
+
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: formatValidationError(validationResult.error),
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
@@ -74,9 +94,10 @@ export default function Auth() {
         });
       }
     } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {

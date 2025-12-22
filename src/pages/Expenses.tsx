@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingDown, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getUserFriendlyError } from "@/lib/error-handler";
+import { expenseSchema, formatValidationError } from "@/lib/validation-schemas";
 
 interface Expense {
   id: string;
@@ -82,9 +84,10 @@ export default function Expenses() {
       if (error) throw error;
       setCrops(data || []);
     } catch (error: any) {
+      console.error('Load crops error:', error);
       toast({
         title: "Error loading crops",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
@@ -104,9 +107,10 @@ export default function Expenses() {
       if (error) throw error;
       setExpenses(data || []);
     } catch (error: any) {
+      console.error('Load expenses error:', error);
       toast({
         title: "Error loading expenses",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
@@ -117,6 +121,24 @@ export default function Expenses() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validate input
+      const validationResult = expenseSchema.safeParse({
+        category: formData.category,
+        amount: parseFloat(formData.amount),
+        description: formData.description || undefined,
+        expense_date: formData.expense_date,
+        crop_id: formData.crop_id || undefined,
+      });
+
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: formatValidationError(validationResult.error),
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -148,9 +170,10 @@ export default function Expenses() {
       });
       loadExpenses();
     } catch (error: any) {
+      console.error('Add expense error:', error);
       toast({
         title: "Error adding expense",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
@@ -167,9 +190,10 @@ export default function Expenses() {
       });
       loadExpenses();
     } catch (error: any) {
+      console.error('Delete expense error:', error);
       toast({
         title: "Error deleting expense",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }

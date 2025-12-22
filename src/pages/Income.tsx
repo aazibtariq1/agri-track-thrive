@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingUp, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getUserFriendlyError } from "@/lib/error-handler";
+import { incomeSchema, formatValidationError } from "@/lib/validation-schemas";
 
 interface Income {
   id: string;
@@ -77,9 +79,10 @@ export default function Income() {
       if (error) throw error;
       setCrops(data || []);
     } catch (error: any) {
+      console.error('Load crops error:', error);
       toast({
         title: "Error loading crops",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
@@ -99,9 +102,10 @@ export default function Income() {
       if (error) throw error;
       setIncome(data || []);
     } catch (error: any) {
+      console.error('Load income error:', error);
       toast({
         title: "Error loading income",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     } finally {
@@ -112,6 +116,24 @@ export default function Income() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validate input
+      const validationResult = incomeSchema.safeParse({
+        source: formData.source,
+        amount: parseFloat(formData.amount),
+        description: formData.description || undefined,
+        income_date: formData.income_date,
+        crop_id: formData.crop_id || undefined,
+      });
+
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: formatValidationError(validationResult.error),
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -143,9 +165,10 @@ export default function Income() {
       });
       loadIncome();
     } catch (error: any) {
+      console.error('Add income error:', error);
       toast({
         title: "Error adding income",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
@@ -162,9 +185,10 @@ export default function Income() {
       });
       loadIncome();
     } catch (error: any) {
+      console.error('Delete income error:', error);
       toast({
         title: "Error deleting income",
-        description: error.message,
+        description: getUserFriendlyError(error),
         variant: "destructive",
       });
     }
