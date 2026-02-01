@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { cropSchema, formatValidationError } from "@/lib/validation-schemas";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,17 +87,37 @@ export default function Crops() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Validate input using Zod schema before database insert
+      const validationResult = cropSchema.safeParse({
+        crop_name: formData.crop_name,
+        crop_type: formData.crop_type,
+        planting_date: formData.planting_date,
+        harvest_date: formData.harvest_date || undefined,
+        expected_yield: formData.expected_yield ? parseFloat(formData.expected_yield) : undefined,
+        market_price: formData.market_price ? parseFloat(formData.market_price) : undefined,
+        notes: formData.notes || undefined,
+      });
+
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: formatValidationError(validationResult.error),
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.from("crops").insert([
         {
           user_id: user.id,
-          crop_name: formData.crop_name,
-          crop_type: formData.crop_type,
-          planting_date: formData.planting_date,
-          harvest_date: formData.harvest_date || null,
-          expected_yield: formData.expected_yield ? parseFloat(formData.expected_yield) : null,
-          market_price: formData.market_price ? parseFloat(formData.market_price) : null,
+          crop_name: validationResult.data.crop_name,
+          crop_type: validationResult.data.crop_type,
+          planting_date: validationResult.data.planting_date,
+          harvest_date: validationResult.data.harvest_date || null,
+          expected_yield: validationResult.data.expected_yield || null,
+          market_price: validationResult.data.market_price || null,
           status: formData.status,
-          notes: formData.notes || null,
+          notes: validationResult.data.notes || null,
         },
       ]);
 
@@ -104,7 +125,7 @@ export default function Crops() {
 
       toast({
         title: "Crop added successfully",
-        description: `${formData.crop_name} has been added to your records.`,
+        description: `${validationResult.data.crop_name} has been added to your records.`,
       });
 
       setOpen(false);
