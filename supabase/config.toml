@@ -1,1 +1,4 @@
 project_id = "yknhpkcnurqpvfatjovp"
+
+[functions.farm-advisor]
+verify_jwt = false
