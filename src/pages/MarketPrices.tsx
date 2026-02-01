@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Wheat, Leaf, Fuel, FlaskConical, Bug, Sprout } from "lucide-react";
-
+import { AIFarmAdvisor } from "@/components/AIFarmAdvisor";
 interface CropPrice {
   name: string;
   urdu_name: string;
@@ -361,13 +361,17 @@ export default function MarketPrices() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               Last updated: {lastRefresh.toLocaleTimeString()}
             </span>
             <Button onClick={fetchPrices} variant="outline" className="gap-2" disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
+            <AIFarmAdvisor 
+              cropPrices={prices}
+              inputPrices={inputPrices}
+            />
           </div>
         </div>
 
