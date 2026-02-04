@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { DollarSign, TrendingDown, TrendingUp, Eye } from "lucide-react";
+import { formatPKR } from "@/lib/utils";
 
 interface CropFinancialCardProps {
   cropId: string;
@@ -26,7 +27,7 @@ export default function CropFinancialCard({ cropId, cropName }: CropFinancialCar
   });
   const [loading, setLoading] = useState(false);
 
-  const loadFinancialData = async () => {
+  const loadFinancialData = useCallback(async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -59,13 +60,13 @@ export default function CropFinancialCard({ cropId, cropName }: CropFinancialCar
     } finally {
       setLoading(false);
     }
-  };
+  }, [cropId]);
 
   useEffect(() => {
     if (open) {
       loadFinancialData();
     }
-  }, [open, cropId]);
+  }, [open, loadFinancialData]);
 
   const chartData = [
     {
@@ -103,7 +104,7 @@ export default function CropFinancialCard({ cropId, cropName }: CropFinancialCar
                     <TrendingUp className="h-4 w-4 text-primary" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-primary">PKR {data.totalIncome.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-primary">{formatPKR(data.totalIncome)}</div>
                   </CardContent>
                 </Card>
                 
@@ -113,7 +114,7 @@ export default function CropFinancialCard({ cropId, cropName }: CropFinancialCar
                     <TrendingDown className="h-4 w-4 text-destructive" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-destructive">PKR {data.totalExpenses.toFixed(2)}</div>
+                    <div className="text-2xl font-bold text-destructive">{formatPKR(data.totalExpenses)}</div>
                   </CardContent>
                 </Card>
                 
@@ -124,7 +125,7 @@ export default function CropFinancialCard({ cropId, cropName }: CropFinancialCar
                   </CardHeader>
                   <CardContent>
                     <div className={`text-2xl font-bold ${data.netProfit >= 0 ? "text-primary" : "text-destructive"}`}>
-                      PKR {data.netProfit.toFixed(2)}
+                      {formatPKR(data.netProfit)}
                     </div>
                   </CardContent>
                 </Card>

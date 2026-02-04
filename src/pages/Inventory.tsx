@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { Plus, Trash2, AlertTriangle, Package, Leaf, FlaskConical, Droplets } from "lucide-react";
 import { getUserFriendlyError } from "@/lib/error-handler";
 import { inventorySchema, formatValidationError } from "@/lib/validation-schemas";
+import { formatPKR } from "@/lib/utils";
 
 interface InventoryItem {
   id: string;
@@ -74,9 +76,13 @@ export default function Inventory() {
 
   const fetchInventory = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from("inventory")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -383,12 +389,30 @@ export default function Inventory() {
                         </span>
                       </TableCell>
                       <TableCell>{item.minimum_stock} {item.unit}</TableCell>
-                      <TableCell>{item.purchase_price ? `PKR ${item.purchase_price.toLocaleString()}` : "-"}</TableCell>
+                      <TableCell>{item.purchase_price ? formatPKR(item.purchase_price) : "-"}</TableCell>
                       <TableCell>{item.expiry_date || "-"}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{item.item_name}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}

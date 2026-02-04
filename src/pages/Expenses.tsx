@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getUserFriendlyError } from "@/lib/error-handler";
 import { expenseSchema, formatValidationError } from "@/lib/validation-schemas";
+import { formatPKR } from "@/lib/utils";
 
 interface Expense {
   id: string;
@@ -305,7 +307,7 @@ export default function Expenses() {
               Total Expenses
             </CardTitle>
             <CardDescription className="text-3xl font-bold text-destructive">
-              PKR {totalExpenses.toFixed(2)}
+              {formatPKR(totalExpenses)}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -347,15 +349,29 @@ export default function Expenses() {
                       <TableCell className="capitalize">{expense.category}</TableCell>
                       <TableCell>{crops.find(c => c.id === expense.crop_id)?.crop_name || "-"}</TableCell>
                       <TableCell>{expense.description || "-"}</TableCell>
-                      <TableCell className="text-right font-medium">PKR {Number(expense.amount).toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatPKR(Number(expense.amount))}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(expense.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this expense of {formatPKR(Number(expense.amount))}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(expense.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))}
