@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { Plus, Trash2, AlertTriangle, Package, Leaf, FlaskConical, Droplets } from "lucide-react";
+ import { Plus, Trash2, AlertTriangle, Package, Leaf, FlaskConical, Droplets, Pencil } from "lucide-react";
 import { getUserFriendlyError } from "@/lib/error-handler";
 import { inventorySchema, formatValidationError } from "@/lib/validation-schemas";
 import { formatPKR } from "@/lib/utils";
@@ -50,6 +50,7 @@ export default function Inventory() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     item_name: "",
     category: "seeds",
@@ -95,6 +96,39 @@ export default function Inventory() {
     }
   };
 
+   const isEditing = editingId !== null;
+ 
+   const resetForm = () => {
+     setFormData({
+       item_name: "",
+       category: "seeds",
+       quantity: "",
+       unit: "kg",
+       minimum_stock: "10",
+       purchase_price: "",
+       purchase_date: "",
+       expiry_date: "",
+       notes: "",
+     });
+     setEditingId(null);
+   };
+ 
+   const handleEdit = (item: InventoryItem) => {
+     setFormData({
+       item_name: item.item_name,
+       category: item.category,
+       quantity: item.quantity.toString(),
+       unit: item.unit,
+       minimum_stock: item.minimum_stock.toString(),
+       purchase_price: item.purchase_price?.toString() || "",
+       purchase_date: item.purchase_date || "",
+       expiry_date: item.expiry_date || "",
+       notes: item.notes || "",
+     });
+     setEditingId(item.id);
+     setIsDialogOpen(true);
+   };
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -123,38 +157,46 @@ export default function Inventory() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("inventory").insert({
-        user_id: user.id,
-        item_name: formData.item_name,
-        category: formData.category,
-        quantity: parseFloat(formData.quantity),
-        unit: formData.unit,
-        minimum_stock: parseFloat(formData.minimum_stock),
-        purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : null,
-        purchase_date: formData.purchase_date || null,
-        expiry_date: formData.expiry_date || null,
-        notes: formData.notes || null,
-      });
+       const itemData = {
+         item_name: formData.item_name,
+         category: formData.category,
+         quantity: parseFloat(formData.quantity),
+         unit: formData.unit,
+         minimum_stock: parseFloat(formData.minimum_stock),
+         purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price) : null,
+         purchase_date: formData.purchase_date || null,
+         expiry_date: formData.expiry_date || null,
+         notes: formData.notes || null,
+       };
+ 
+       if (isEditing) {
+         const { error } = await supabase
+           .from("inventory")
+           .update(itemData)
+           .eq("id", editingId);
+ 
+         if (error) throw error;
+         toast({ title: "Success", description: "Item updated" });
+       } else {
+         const { error } = await supabase.from("inventory").insert({
+           user_id: user.id,
+           ...itemData,
+         });
+ 
+         if (error) throw error;
+         toast({ title: "Success", description: "Item added to inventory" });
+       }
 
-      if (error) throw error;
-
-      toast({ title: "Success", description: "Item added to inventory" });
       setIsDialogOpen(false);
-      setFormData({
-        item_name: "",
-        category: "seeds",
-        quantity: "",
-        unit: "kg",
-        minimum_stock: "10",
-        purchase_price: "",
-        purchase_date: "",
-        expiry_date: "",
-        notes: "",
-      });
+       resetForm();
       fetchInventory();
     } catch (error: any) {
       console.error('Add inventory error:', error);
-      toast({ title: "Error", description: getUserFriendlyError(error), variant: "destructive" });
+       toast({ 
+         title: isEditing ? "Error updating item" : "Error adding item", 
+         description: getUserFriendlyError(error), 
+         variant: "destructive" 
+       });
     }
   };
 
@@ -190,7 +232,10 @@ export default function Inventory() {
             <h1 className="text-3xl font-bold text-foreground">Inventory</h1>
             <p className="text-muted-foreground">Manage your seeds, fertilizers, and chemicals</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+         <Dialog open={isDialogOpen} onOpenChange={(open) => {
+           setIsDialogOpen(open);
+           if (!open) resetForm();
+         }}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" /> Add Item
@@ -198,7 +243,7 @@ export default function Inventory() {
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Add Inventory Item</DialogTitle>
+               <DialogTitle>{isEditing ? "Edit Inventory Item" : "Add Inventory Item"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -304,7 +349,9 @@ export default function Inventory() {
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
-                <Button type="submit" className="w-full">Add Item</Button>
+               <Button type="submit" className="w-full">
+                 {isEditing ? "Update Item" : "Add Item"}
+               </Button>
               </form>
             </DialogContent>
           </Dialog>
@@ -391,7 +438,10 @@ export default function Inventory() {
                       <TableCell>{item.minimum_stock} {item.unit}</TableCell>
                       <TableCell>{item.purchase_price ? formatPKR(item.purchase_price) : "-"}</TableCell>
                       <TableCell>{item.expiry_date || "-"}</TableCell>
-                      <TableCell>
+                     <TableCell className="space-x-1">
+                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                         <Pencil className="h-4 w-4" />
+                       </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon">
