@@ -6,6 +6,7 @@ import StatCard from "@/components/StatCard";
 import { DollarSign, TrendingDown, TrendingUp, Sprout } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+ import WeatherWidget from "@/components/WeatherWidget";
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -108,10 +109,13 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="space-y-8">
-        <div>
+         <div className="flex flex-col gap-1">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
           <p className="text-muted-foreground">Your farm's financial summary at a glance</p>
         </div>
+ 
+         {/* Weather Widget */}
+         <WeatherWidget />
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

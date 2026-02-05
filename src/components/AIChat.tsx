@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+ import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, User, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,15 +19,17 @@ interface AIChatProps {
 
 export function AIChat({ messages, isLoading, onSendMessage, placeholder }: AIChatProps) {
   const [input, setInput] = useState('');
-  const scrollRef = useRef<HTMLDivElement>(null);
+   const messagesEndRef = useRef<HTMLDivElement>(null);
+   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+   const scrollToBottom = useCallback(() => {
+     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   }, []);
+ 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+     scrollToBottom();
+   }, [messages, isLoading, scrollToBottom]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,9 +48,12 @@ export function AIChat({ messages, isLoading, onSendMessage, placeholder }: AICh
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+       {/* Messages Container with proper scrolling */}
+       <div 
+         ref={scrollContainerRef}
+         className="flex-1 overflow-y-auto p-4"
+       >
+         <div className="space-y-4 min-h-full">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
               <Sparkles className="h-8 w-8 mx-auto mb-3 text-primary/50" />
@@ -108,8 +112,11 @@ export function AIChat({ messages, isLoading, onSendMessage, placeholder }: AICh
               </div>
             </div>
           )}
+           
+           {/* Scroll anchor */}
+           <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+       </div>
 
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-4 border-t">

@@ -1,4 +1,7 @@
-project_id = "yknhpkcnurqpvfatjovp"
-
-[functions.farm-advisor]
-verify_jwt = false
+ project_id = "yknhpkcnurqpvfatjovp"
+ 
+ [functions.farm-advisor]
+ verify_jwt = false
+ 
+ [functions.get-weather]
+ verify_jwt = false
