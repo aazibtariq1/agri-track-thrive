@@ -11,7 +11,8 @@ import Income from "./pages/Income";
 import Inventory from "./pages/Inventory";
 import MarketPrices from "./pages/MarketPrices";
 import Reports from "./pages/Reports";
- import ProfitCalculator from "./pages/ProfitCalculator";
+import ProfitCalculator from "./pages/ProfitCalculator";
+import AIAdvisor from "./pages/AIAdvisor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +31,8 @@ const App = () => (
           <Route path="/income" element={<Income />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/market-prices" element={<MarketPrices />} />
-           <Route path="/profit-calculator" element={<ProfitCalculator />} />
+          <Route path="/profit-calculator" element={<ProfitCalculator />} />
+          <Route path="/ai-advisor" element={<AIAdvisor />} />
           <Route path="/reports" element={<Reports />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
