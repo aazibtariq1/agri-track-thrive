@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
- import { LayoutDashboard, Sprout, TrendingDown, TrendingUp, BarChart3, LogOut, Package, LineChart, Calculator, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Sprout, TrendingDown, TrendingUp, BarChart3, LogOut, Package, LineChart, Calculator, MessageSquare, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +15,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isOnline } = useOnlineStatus();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -45,12 +48,18 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-2">
             <Sprout className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">AgriManager</h1>
+            {isOnline ? (
+              <Wifi className="h-4 w-4 text-primary" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-destructive" />
+            )}
           </div>
           <Button onClick={handleSignOut} variant="outline" size="sm">
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>
         </div>
+        <OfflineIndicator />
       </header>
 
       {/* Navigation */}

@@ -36,7 +36,7 @@ export const expenseSchema = z.object({
     .optional(),
   expense_date: z.string()
     .min(1, 'Date is required'),
-  crop_id: z.string().optional(),
+  crop_id: z.string().min(1, 'Please select a crop'),
 });
 
 // Income form validation schema
@@ -50,7 +50,7 @@ export const incomeSchema = z.object({
     .optional(),
   income_date: z.string()
     .min(1, 'Date is required'),
-  crop_id: z.string().optional(),
+  crop_id: z.string().min(1, 'Please select a crop'),
 });
 
 // Inventory form validation schema
