@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => ({
       manifest: false, // Using external manifest.json
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        runtimeCaching: [
+      runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.open-meteo\.com\/.*/i,
             handler: "NetworkFirst",
@@ -27,8 +27,20 @@ export default defineConfig(({ mode }) => ({
               cacheName: "weather-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60, // 1 hour
+                maxAgeSeconds: 60 * 60,
               },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "supabase-data-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 24 * 60 * 60,
+              },
+              networkTimeoutSeconds: 5,
             },
           },
         ],
