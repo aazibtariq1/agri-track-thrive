@@ -43,7 +43,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Wheat",
       urdu_name: "گندم",
       price: smallVariation(4425), // Khanpur: 4,390-4,465 per 40kg
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 50),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.2).toFixed(2)),
       last_updated: baseTime,
@@ -52,8 +52,8 @@ const getMarketPrices = (): CropPrice[] => {
     {
       name: "Cotton",
       urdu_name: "کپاس",
-      price: smallVariation(7500), // 7,000-8,000 per 40kg
-      unit: "40 kg",
+      price: smallVariation(7500), // 7,000-8,000 per mand
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 150),
       change_percent: parseFloat(((Math.random() - 0.5) * 2).toFixed(2)),
       last_updated: baseTime,
@@ -63,7 +63,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Rice (Basmati)",
       urdu_name: "باسمتی چاول",
       price: smallVariation(8200), // Super Basmati prices in RYK area
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 100),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.5).toFixed(2)),
       last_updated: baseTime,
@@ -73,7 +73,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Corn (Maize)",
       urdu_name: "مکئی",
       price: smallVariation(1180), // Maize prices in RYK district
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 30),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.5).toFixed(2)),
       last_updated: baseTime,
@@ -83,7 +83,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Sugarcane",
       urdu_name: "گنا",
       price: smallVariation(380), // Mill rate in RYK area
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 10),
       change_percent: parseFloat(((Math.random() - 0.5) * 0.8).toFixed(2)),
       last_updated: baseTime,
@@ -93,7 +93,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Sunflower",
       urdu_name: "سورج مکھی",
       price: smallVariation(3400), // Sunflower seed prices
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 60),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.8).toFixed(2)),
       last_updated: baseTime,
@@ -103,7 +103,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Mustard",
       urdu_name: "سرسوں",
       price: smallVariation(4800), // Sarson prices in South Punjab
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 70),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.5).toFixed(2)),
       last_updated: baseTime,
@@ -113,7 +113,7 @@ const getMarketPrices = (): CropPrice[] => {
       name: "Potato",
       urdu_name: "آلو",
       price: smallVariation(2200), // Winter potato prices
-      unit: "40 kg",
+      unit: "mand",
       change: Math.round((Math.random() - 0.5) * 80),
       change_percent: parseFloat(((Math.random() - 0.5) * 3.5).toFixed(2)),
       last_updated: baseTime,

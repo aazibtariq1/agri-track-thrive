@@ -61,7 +61,7 @@ ${context.inputPrices.map(i => `- ${i.name} (${i.urdu_name}): PKR ${i.price.toLo
 
 ${context?.userCrops?.length ? `
 User's Active Crops:
-${context.userCrops.map(c => `- ${c.crop_name}: ${c.status}, Expected yield: ${c.expected_yield}kg`).join('\n')}
+${context.userCrops.map(c => `- ${c.crop_name}: ${c.status}, Expected yield: ${c.expected_yield} mands`).join('\n')}
 ` : ''}
 
 ${context?.userInventory?.length ? `
