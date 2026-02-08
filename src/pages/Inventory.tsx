@@ -277,6 +277,7 @@ export default function Inventory() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="mand">Mands (40 kg)</SelectItem>
                         <SelectItem value="kg">Kilograms (kg)</SelectItem>
                         <SelectItem value="g">Grams (g)</SelectItem>
                         <SelectItem value="l">Liters (L)</SelectItem>

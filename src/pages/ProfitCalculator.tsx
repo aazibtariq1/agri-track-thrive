@@ -159,12 +159,12 @@
  
                {/* Expected Yield */}
                <div className="space-y-2">
-                 <Label htmlFor="yield">Expected Yield (kg)</Label>
-                 <Input
-                   id="yield"
-                   type="number"
-                   step="0.01"
-                   placeholder="e.g., 500"
+                  <Label htmlFor="yield">Expected Yield (mands)</Label>
+                  <Input
+                    id="yield"
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g., 12.5"
                    value={expectedYield}
                    onChange={(e) => setExpectedYield(e.target.value)}
                  />
@@ -172,7 +172,7 @@
  
                {/* Market Price */}
                <div className="space-y-2">
-                 <Label htmlFor="price">Market Price (PKR/kg)</Label>
+                 <Label htmlFor="price">Market Price (PKR/mand)</Label>
                  <Input
                    id="price"
                    type="number"
@@ -215,7 +215,7 @@
                    </div>
                    <div className="text-sm text-muted-foreground text-right">
                      {yieldNum > 0 && priceNum > 0 && (
-                       <p>{yieldNum} kg × {formatPKR(priceNum)}/kg</p>
+                       <p>{yieldNum} mands × {formatPKR(priceNum)}/mand</p>
                      )}
                    </div>
                  </div>
@@ -280,18 +280,18 @@
                      </div>
                      <div>
                        <p className="text-sm text-muted-foreground">Break-even Yield</p>
-                       <p className="text-2xl font-bold">{breakEvenYield.toFixed(2)} kg</p>
+                       <p className="text-2xl font-bold">{breakEvenYield.toFixed(2)} mands</p>
                      </div>
                    </div>
                    {yieldNum > 0 && breakEvenYield > 0 && (
                      <div className="text-right">
                        {yieldNum >= breakEvenYield ? (
                          <p className="text-sm text-green-500">
-                           ✓ Above break-even by {(yieldNum - breakEvenYield).toFixed(2)} kg
+                           ✓ Above break-even by {(yieldNum - breakEvenYield).toFixed(2)} mands
                          </p>
                        ) : (
                          <p className="text-sm text-destructive">
-                           ✗ Below break-even by {(breakEvenYield - yieldNum).toFixed(2)} kg
+                           ✗ Below break-even by {(breakEvenYield - yieldNum).toFixed(2)} mands
                          </p>
                        )}
                      </div>

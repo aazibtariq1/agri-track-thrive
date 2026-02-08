@@ -238,7 +238,7 @@ export default function Crops() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="expected_yield">Expected Yield (kg)</Label>
+                    <Label htmlFor="expected_yield">Expected Yield (mands)</Label>
                     <Input
                       id="expected_yield"
                       type="number"
@@ -248,7 +248,7 @@ export default function Crops() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="market_price">Market Price (PKR/kg)</Label>
+                    <Label htmlFor="market_price">Market Price (PKR/mand)</Label>
                     <Input
                       id="market_price"
                       type="number"
@@ -331,12 +331,12 @@ export default function Crops() {
                     <div className="flex items-center text-sm">
                       <TrendingUp className="mr-2 h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Expected: </span>
-                      <span className="ml-1">{crop.expected_yield} kg</span>
+                      <span className="ml-1">{crop.expected_yield} mands</span>
                     </div>
                   )}
                   {crop.market_price && (
                     <div className="flex items-center text-sm font-semibold text-primary">
-                      PKR {crop.market_price}/kg
+                      PKR {crop.market_price}/mand
                     </div>
                   )}
                   {crop.notes && (
