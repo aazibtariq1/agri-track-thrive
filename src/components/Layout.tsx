@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Sprout, TrendingDown, TrendingUp, BarChart3, LogOut, Package, LineChart, Calculator, MessageSquare, Wifi, WifiOff } from "lucide-react";
+import { LayoutDashboard, Sprout, TrendingDown, TrendingUp, BarChart3, LogOut, LineChart, Calculator, MessageSquare, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +31,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: "/crops", icon: Sprout, label: "Crops" },
     { path: "/expenses", icon: TrendingDown, label: "Expenses" },
     { path: "/income", icon: TrendingUp, label: "Income" },
-    { path: "/inventory", icon: Package, label: "Inventory" },
+    
     { path: "/market-prices", icon: LineChart, label: "Market Prices" },
     { path: "/profit-calculator", icon: Calculator, label: "Profit Calculator" },
     { path: "/ai-advisor", icon: MessageSquare, label: "AI Advisor" },
