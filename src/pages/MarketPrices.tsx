@@ -72,22 +72,22 @@ const getMarketPrices = (): CropPrice[] => {
     {
       name: "Corn (Maize)",
       urdu_name: "مکئی",
-      price: smallVariation(1180), // Maize prices in RYK district
+      price: smallVariation(2800), // Khanpur Mandi Feb 2026: PKR 2,600-3,000 per mand
       unit: "mand",
-      change: Math.round((Math.random() - 0.5) * 30),
+      change: Math.round((Math.random() - 0.5) * 50),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.5).toFixed(2)),
       last_updated: baseTime,
-      market: "Sadiqabad Mandi",
+      market: "Khanpur Mandi",
     },
     {
       name: "Sugarcane",
       urdu_name: "گنا",
-      price: smallVariation(380), // Mill rate in RYK area
+      price: smallVariation(425), // Hamza Sugar Mill Feb 2026: PKR 390-460 per mand
       unit: "mand",
-      change: Math.round((Math.random() - 0.5) * 10),
+      change: Math.round((Math.random() - 0.5) * 15),
       change_percent: parseFloat(((Math.random() - 0.5) * 0.8).toFixed(2)),
       last_updated: baseTime,
-      market: "JDW Sugar Mills RYK",
+      market: "Hamza Sugar Mill",
     },
     {
       name: "Sunflower",

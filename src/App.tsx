@@ -8,7 +8,7 @@ import Auth from "./pages/Auth";
 import Crops from "./pages/Crops";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
-import Inventory from "./pages/Inventory";
+
 import MarketPrices from "./pages/MarketPrices";
 import Reports from "./pages/Reports";
 import ProfitCalculator from "./pages/ProfitCalculator";
@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/crops" element={<Crops />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/income" element={<Income />} />
-          <Route path="/inventory" element={<Inventory />} />
+          
           <Route path="/market-prices" element={<MarketPrices />} />
           <Route path="/profit-calculator" element={<ProfitCalculator />} />
           <Route path="/ai-advisor" element={<AIAdvisor />} />

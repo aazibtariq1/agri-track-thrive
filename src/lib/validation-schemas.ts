@@ -53,30 +53,6 @@ export const incomeSchema = z.object({
   crop_id: z.string().min(1, 'Please select a crop'),
 });
 
-// Inventory form validation schema
-export const inventorySchema = z.object({
-  item_name: z.string()
-    .trim()
-    .min(1, 'Item name is required')
-    .max(MAX_NAME_LENGTH, `Item name must be less than ${MAX_NAME_LENGTH} characters`),
-  category: z.string()
-    .min(1, 'Category is required'),
-  quantity: z.number()
-    .min(0, 'Quantity cannot be negative'),
-  unit: z.string()
-    .min(1, 'Unit is required'),
-  minimum_stock: z.number()
-    .min(0, 'Minimum stock cannot be negative'),
-  purchase_price: z.number()
-    .min(0, 'Purchase price cannot be negative')
-    .optional(),
-  purchase_date: z.string().optional(),
-  expiry_date: z.string().optional(),
-  notes: z.string()
-    .max(MAX_NOTES_LENGTH, `Notes must be less than ${MAX_NOTES_LENGTH} characters`)
-    .optional(),
-});
-
 // Auth form validation schema
 export const authSchema = z.object({
   email: z.string()
