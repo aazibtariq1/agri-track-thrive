@@ -15,6 +15,10 @@ export default function Dashboard() {
     totalExpenses: 0,
     netProfit: 0,
     activeCrops: 0,
+    thisMonthIncome: 0,
+    lastMonthIncome: 0,
+    thisMonthExpenses: 0,
+    lastMonthExpenses: 0,
   });
   const [monthlyData, setMonthlyData] = useState<any[]>([]);
   const [expensesByCategory, setExpensesByCategory] = useState<any[]>([]);
@@ -37,16 +41,16 @@ export default function Dashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get total income
+      // Get total income with dates
       const { data: incomeData } = await supabase
         .from("income")
-        .select("amount")
+        .select("amount, income_date")
         .eq("user_id", user.id);
 
-      // Get total expenses
+      // Get total expenses with dates
       const { data: expensesData } = await supabase
         .from("expenses")
-        .select("amount, category")
+        .select("amount, category, expense_date")
         .eq("user_id", user.id);
 
       // Get active crops
@@ -58,6 +62,16 @@ export default function Dashboard() {
 
       const totalIncome = incomeData?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
       const totalExpenses = expensesData?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+
+      // Month-over-month calculations
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split("T")[0];
+
+      const thisMonthIncome = incomeData?.filter(i => i.income_date >= thisMonthStart).reduce((s, i) => s + Number(i.amount), 0) || 0;
+      const lastMonthIncome = incomeData?.filter(i => i.income_date >= lastMonthStart && i.income_date < thisMonthStart).reduce((s, i) => s + Number(i.amount), 0) || 0;
+      const thisMonthExpenses = expensesData?.filter(e => e.expense_date >= thisMonthStart).reduce((s, e) => s + Number(e.amount), 0) || 0;
+      const lastMonthExpenses = expensesData?.filter(e => e.expense_date >= lastMonthStart && e.expense_date < thisMonthStart).reduce((s, e) => s + Number(e.amount), 0) || 0;
 
       // Calculate expenses by category
       const categoryMap = new Map();
@@ -76,6 +90,10 @@ export default function Dashboard() {
         totalExpenses,
         netProfit: totalIncome - totalExpenses,
         activeCrops: cropsData?.length || 0,
+        thisMonthIncome,
+        lastMonthIncome,
+        thisMonthExpenses,
+        lastMonthExpenses,
       });
 
       setExpensesByCategory(categoryData);
@@ -123,11 +141,19 @@ export default function Dashboard() {
             title="Total Income"
             value={`PKR ${stats.totalIncome.toFixed(2)}`}
             icon={TrendingUp}
+            trend={stats.lastMonthIncome > 0 ? {
+              value: `${stats.thisMonthIncome >= stats.lastMonthIncome ? "+" : ""}${((stats.thisMonthIncome - stats.lastMonthIncome) / stats.lastMonthIncome * 100).toFixed(0)}% vs last month`,
+              positive: stats.thisMonthIncome >= stats.lastMonthIncome,
+            } : undefined}
           />
           <StatCard
             title="Total Expenses"
             value={`PKR ${stats.totalExpenses.toFixed(2)}`}
             icon={TrendingDown}
+            trend={stats.lastMonthExpenses > 0 ? {
+              value: `${stats.thisMonthExpenses >= stats.lastMonthExpenses ? "+" : ""}${((stats.thisMonthExpenses - stats.lastMonthExpenses) / stats.lastMonthExpenses * 100).toFixed(0)}% vs last month`,
+              positive: stats.thisMonthExpenses < stats.lastMonthExpenses,
+            } : undefined}
           />
           <StatCard
             title="Net Profit"

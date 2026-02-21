@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Trash2, Pencil, WifiOff } from "lucide-react";
+import { Plus, TrendingUp, Trash2, Pencil, WifiOff, Download, Search } from "lucide-react";
+import { exportToCSV } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,9 @@ export default function Income() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [offlineEntries, setOfflineEntries] = useState<QueueEntry[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [formData, setFormData] = useState({
     source: "crop_sale",
     amount: "",
@@ -211,7 +215,17 @@ export default function Income() {
     }
   };
 
-  const totalIncome = income.reduce((sum, inc) => sum + Number(inc.amount), 0);
+  const filteredIncome = income.filter((inc) => {
+    const matchesSearch = searchQuery === "" ||
+      inc.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (inc.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (crops.find(c => c.id === inc.crop_id)?.crop_name || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFrom = !fromDate || inc.income_date >= fromDate;
+    const matchesTo = !toDate || inc.income_date <= toDate;
+    return matchesSearch && matchesFrom && matchesTo;
+  });
+
+  const totalIncome = filteredIncome.reduce((sum, inc) => sum + Number(inc.amount), 0);
 
   if (loading) {
     return (
@@ -231,13 +245,28 @@ export default function Income() {
             <h2 className="text-3xl font-bold tracking-tight">Income Tracking</h2>
             <p className="text-muted-foreground">Record and monitor all farm income</p>
           </div>
-          <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>
-              <Button disabled={crops.length === 0}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Income
+          <div className="flex gap-2">
+            {income.length > 0 && (
+              <Button variant="outline" onClick={() => {
+                const headers = ["Date", "Source", "Crop", "Amount (PKR)", "Description"];
+                const rows = filteredIncome.map(inc => [
+                  inc.income_date, inc.source.split("_").join(" "),
+                  crops.find(c => c.id === inc.crop_id)?.crop_name || "-",
+                  Number(inc.amount).toFixed(2), inc.description || "",
+                ]);
+                exportToCSV(`income_${new Date().toISOString().split("T")[0]}.csv`, headers, rows);
+              }}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Excel
               </Button>
-            </DialogTrigger>
+            )}
+            <Dialog open={open} onOpenChange={handleOpenChange}>
+              <DialogTrigger asChild>
+                <Button disabled={crops.length === 0}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Income
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{isEditing ? "Edit Income" : "Add New Income"}</DialogTitle>
@@ -293,9 +322,22 @@ export default function Income() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {crops.length === 0 && <NoCropsWarning context="income" />}
+
+        {/* Search & Date Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search by source, crop, description..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          </div>
+          <div className="flex gap-2">
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-[150px]" />
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-[150px]" />
+          </div>
+        </div>
 
         <Card>
           <CardHeader>
@@ -373,7 +415,7 @@ export default function Income() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {income.map((inc) => (
+                  {filteredIncome.map((inc) => (
                     <TableRow key={inc.id}>
                       <TableCell>{new Date(inc.income_date).toLocaleDateString()}</TableCell>
                       <TableCell className="capitalize">
