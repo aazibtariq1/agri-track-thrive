@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingDown, Trash2, Pencil, WifiOff } from "lucide-react";
+import { Plus, TrendingDown, Trash2, Pencil, WifiOff, Download, Search } from "lucide-react";
+import { exportToCSV } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,9 @@ export default function Expenses() {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [offlineEntries, setOfflineEntries] = useState<QueueEntry[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [formData, setFormData] = useState({
     category: "seeds",
     amount: "",
@@ -214,7 +218,17 @@ export default function Expenses() {
     }
   };
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+  const filteredExpenses = expenses.filter((exp) => {
+    const matchesSearch = searchQuery === "" ||
+      exp.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (exp.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (crops.find(c => c.id === exp.crop_id)?.crop_name || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFrom = !fromDate || exp.expense_date >= fromDate;
+    const matchesTo = !toDate || exp.expense_date <= toDate;
+    return matchesSearch && matchesFrom && matchesTo;
+  });
+
+  const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
 
   if (loading) {
     return (
@@ -234,13 +248,28 @@ export default function Expenses() {
             <h2 className="text-3xl font-bold tracking-tight">Expense Tracking</h2>
             <p className="text-muted-foreground">Monitor and manage all farm expenses</p>
           </div>
-          <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogTrigger asChild>
-              <Button disabled={crops.length === 0}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Expense
+          <div className="flex gap-2">
+            {expenses.length > 0 && (
+              <Button variant="outline" onClick={() => {
+                const headers = ["Date", "Category", "Crop", "Amount (PKR)", "Description"];
+                const rows = filteredExpenses.map(exp => [
+                  exp.expense_date, exp.category,
+                  crops.find(c => c.id === exp.crop_id)?.crop_name || "-",
+                  Number(exp.amount).toFixed(2), exp.description || "",
+                ]);
+                exportToCSV(`expenses_${new Date().toISOString().split("T")[0]}.csv`, headers, rows);
+              }}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Excel
               </Button>
-            </DialogTrigger>
+            )}
+            <Dialog open={open} onOpenChange={handleOpenChange}>
+              <DialogTrigger asChild>
+                <Button disabled={crops.length === 0}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Expense
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{isEditing ? "Edit Expense" : "Add New Expense"}</DialogTitle>
@@ -294,9 +323,22 @@ export default function Expenses() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {crops.length === 0 && <NoCropsWarning context="expense" />}
+
+        {/* Search & Date Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search by category, crop, description..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          </div>
+          <div className="flex gap-2">
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} placeholder="From" className="w-[150px]" />
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} placeholder="To" className="w-[150px]" />
+          </div>
+        </div>
 
         <Card>
           <CardHeader>
@@ -374,7 +416,7 @@ export default function Expenses() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses.map((expense) => (
+                  {filteredExpenses.map((expense) => (
                     <TableRow key={expense.id}>
                       <TableCell>{new Date(expense.expense_date).toLocaleDateString()}</TableCell>
                       <TableCell className="capitalize">{expense.category}</TableCell>

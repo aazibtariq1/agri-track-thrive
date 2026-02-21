@@ -5,7 +5,9 @@ import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportToCSV } from "@/lib/export-utils";
 
 export default function Reports() {
   const [loading, setLoading] = useState(true);
@@ -91,16 +93,26 @@ export default function Reports() {
             <h2 className="text-3xl font-bold tracking-tight">Financial Reports</h2>
             <p className="text-muted-foreground">Analyze your farm's financial performance</p>
           </div>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="quarterly">Quarterly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => {
+              const headers = ["Period", "Total Income (PKR)", "Total Expenses (PKR)", "Net Profit (PKR)"];
+              const rows = [[period, stats.totalIncome.toFixed(2), stats.totalExpenses.toFixed(2), stats.netProfit.toFixed(2)]];
+              exportToCSV(`report_${new Date().toISOString().split("T")[0]}.csv`, headers, rows);
+            }}>
+              <Download className="mr-2 h-4 w-4" />
+              Download Report
+            </Button>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="yearly">Yearly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Summary Cards */}

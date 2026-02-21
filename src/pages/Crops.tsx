@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, TrendingUp, Pencil, Trash2 } from "lucide-react";
+import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import CropFinancialCard from "@/components/CropFinancialCard";
@@ -207,13 +208,28 @@ export default function Crops() {
             <h2 className="text-3xl font-bold tracking-tight">Crop Management</h2>
             <p className="text-muted-foreground">Track and manage all your crops</p>
           </div>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditingId(null); }}>
-            <DialogTrigger asChild>
-              <Button onClick={openAddDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Crop
+          <div className="flex gap-2">
+            {crops.length > 0 && (
+              <Button variant="outline" onClick={() => {
+                const headers = ["Crop Name", "Type", "Status", "Planting Date", "Harvest Date", "Expected Yield (mands)", "Actual Yield (mands)", "Market Price (PKR/mand)", "Notes"];
+                const rows = crops.map(c => [
+                  c.crop_name, c.crop_type, c.status || "", c.planting_date,
+                  c.harvest_date || "", c.expected_yield?.toString() || "", c.actual_yield?.toString() || "",
+                  c.market_price?.toString() || "", c.notes || "",
+                ]);
+                exportToCSV(`crops_${new Date().toISOString().split("T")[0]}.csv`, headers, rows);
+              }}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Excel
               </Button>
-            </DialogTrigger>
+            )}
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditingId(null); }}>
+              <DialogTrigger asChild>
+                <Button onClick={openAddDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Crop
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingId ? "Edit Crop" : "Add New Crop"}</DialogTitle>
@@ -277,6 +293,7 @@ export default function Crops() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Delete Confirmation */}
