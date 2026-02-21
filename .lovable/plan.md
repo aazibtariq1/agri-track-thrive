@@ -1,84 +1,102 @@
 
 
-## Plan: Edit Crops, Remove Inventory, Update Market Prices, and Improvements
+## Plan: Excel Export + Feature Improvements
 
 ### Overview
-This plan covers four areas:
-1. **Add Edit and Delete functionality to Crops** - Allow editing and deleting crops with confirmation dialogs
-2. **Remove Inventory page** - Delete the page and all references
-3. **Update Market Prices** - Correct Corn price to Khanpur Mandi rate, Sugarcane to Hamza Sugar Mill rate
-4. **Additional Improvements** - Error boundary, crop status update shortcut, and actual yield tracking
+Add Excel/CSV export functionality across all data pages (Crops, Expenses, Income, Reports) and implement several improvements to make the app more reliable and user-friendly.
 
 ---
 
-## 1. Add Edit and Delete to Crops Page
+## Part 1: Excel/CSV Data Export
 
-### What changes
-Currently the Crops page only lets you add crops. This adds:
-- **Edit button** (pencil icon) on each crop card to open the same form pre-filled with crop data, then update via Supabase `.update()`
-- **Delete button** (trash icon) with an AlertDialog confirmation ("Are you sure? This will also affect linked expenses/income records.")
-- State tracking for `editingId` to switch between add/edit modes
+### What it does
+Adds a "Download Excel" button on the Crops, Expenses, Income, and Reports pages. Clicking it exports all the user's data into a `.csv` file (which opens directly in Excel, Google Sheets, etc.) with proper column headers and formatted values.
 
-### Files to modify
-- `src/pages/Crops.tsx` - Add `editingId` state, `handleEdit()`, `handleDelete()`, edit/delete buttons on cards, reuse the dialog form for editing
+### Implementation
 
----
+**New File: `src/lib/export-utils.ts`**
+- A utility with a `exportToCSV(filename, headers, rows)` function
+- Converts data arrays into CSV format with proper escaping (commas in descriptions, PKR values, etc.)
+- Triggers a browser download of the `.csv` file
+- No external library needed -- uses built-in browser APIs
 
-## 2. Remove Inventory Page
+**Changes to `src/pages/Crops.tsx`**
+- Add a "Download Excel" button next to "Add Crop"
+- Exports: Crop Name, Type, Status, Planting Date, Harvest Date, Expected Yield (mands), Actual Yield (mands), Market Price (PKR/mand), Notes
 
-### What changes
-Completely remove the Inventory page and all references to it.
+**Changes to `src/pages/Expenses.tsx`**
+- Add a "Download Excel" button next to "Add Expense"
+- Exports: Date, Category, Crop Name, Amount (PKR), Description
 
-### Files to modify
-- **Delete**: `src/pages/Inventory.tsx`
-- `src/App.tsx` - Remove import and route for Inventory
-- `src/components/Layout.tsx` - Remove Inventory from `navItems` array (line 34)
-- `src/lib/validation-schemas.ts` - Remove `inventorySchema` (optional cleanup, but keeps code clean)
+**Changes to `src/pages/Income.tsx`**
+- Add a "Download Excel" button next to "Add Income"
+- Exports: Date, Source, Crop Name, Amount (PKR), Description
 
-Note: The database table stays -- only the UI page is removed. The AI advisor references to inventory will be cleaned up as well.
-
----
-
-## 3. Update Market Prices
-
-### Corn (Maize)
-Current: PKR 1,180/mand from "Sadiqabad Mandi"
-Updated: PKR ~2,800/mand from "Khanpur Mandi" (based on current Feb 2026 rates of PKR 2,600-3,000 per 40kg in Punjab)
-
-### Sugarcane
-Current: PKR 380/mand from "JDW Sugar Mills RYK"
-Updated: PKR ~425/mand from "Hamza Sugar Mill" (based on current mill rates of PKR 390-460 per 40kg)
-
-### Files to modify
-- `src/pages/MarketPrices.tsx` - Update Corn price base value and market name; update Sugarcane price and market name to Hamza Sugar Mill
+**Changes to `src/pages/Reports.tsx`**
+- Add a "Download Report" button
+- Exports the summary data (period, income, expenses, net profit)
 
 ---
 
-## 4. Additional Improvements
+## Part 2: Suggested Improvements (Will Be Implemented)
 
-### 4a. Actual Yield Field on Crop Edit
-When editing a crop (especially after harvest), allow entering "Actual Yield" so farmers can compare expected vs actual performance. The `actual_yield` column already exists in the database.
+### Improvement A: Date Range Filters on Expenses and Income
+Currently all records are shown without filtering. Add "From Date" and "To Date" filter inputs so farmers can view records for a specific season or month. The export will also respect these filters.
 
-### 4b. Crop Status Quick Update
-Add the ability to quickly change crop status (planted -> growing -> harvested -> sold) from the crop card without opening the full edit dialog.
+### Improvement B: Dashboard Summary Cards Enhancement
+Add a "This Month" vs "Last Month" comparison showing percentage change arrows on the dashboard stat cards, so farmers can quickly see if they're doing better or worse.
+
+### Improvement C: Crop Financial Summary on Each Crop Card
+Show a quick summary on each crop card: total expenses spent on that crop, total income earned, and net profit/loss -- giving farmers an at-a-glance view of each crop's financial performance. (This may already exist via `CropFinancialCard` -- will enhance if needed.)
+
+### Improvement D: Search/Filter on Data Tables
+Add a search box above the Expenses and Income tables to quickly find records by description, category, or crop name.
 
 ---
 
-## Summary of Changes
+## Files to Create
 
-| File | Change |
-|------|--------|
-| `src/pages/Crops.tsx` | Add edit, delete, actual yield tracking, status quick-update |
-| `src/pages/Inventory.tsx` | DELETE this file |
-| `src/App.tsx` | Remove Inventory import and route |
-| `src/components/Layout.tsx` | Remove Inventory from navigation |
-| `src/pages/MarketPrices.tsx` | Update Corn to Khanpur Mandi PKR ~2,800; Sugarcane to Hamza Sugar Mill PKR ~425 |
-| `src/lib/validation-schemas.ts` | Remove inventorySchema |
+| File | Purpose |
+|------|---------|
+| `src/lib/export-utils.ts` | CSV export utility function |
 
-### Technical Notes
-- Crop edit reuses the existing dialog form with `editingId` state pattern (same as Expenses and Inventory already do)
-- Delete uses AlertDialog for confirmation (matching the existing pattern in Expenses page)
-- Market prices are display-only hardcoded values with small random variations -- no database change needed
-- The `actual_yield` column already exists in the crops database table, so no migration is needed
-- Inventory database table is kept intact -- only the UI page is removed
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Crops.tsx` | Add export button |
+| `src/pages/Expenses.tsx` | Add export button, date filters, search box |
+| `src/pages/Income.tsx` | Add export button, date filters, search box |
+| `src/pages/Reports.tsx` | Add export button |
+| `src/pages/Dashboard.tsx` | Add month-over-month comparison on stat cards |
+
+---
+
+## Technical Details
+
+### CSV Export Utility
+```text
+exportToCSV(filename, headers, rows)
+  - filename: "crops_2026-02-21.csv"
+  - headers: ["Date", "Category", "Amount (PKR)", ...]
+  - rows: [["2026-02-21", "Seeds", "5000.00", ...], ...]
+  - Handles: comma escaping, newline escaping, UTF-8 BOM for Excel compatibility
+  - Uses: Blob + URL.createObjectURL + anchor click download
+```
+
+### Date Filter State
+```text
+Expenses/Income pages will add:
+  - fromDate state (default: empty = show all)
+  - toDate state (default: empty = show all)
+  - Filtered data computed from the full dataset
+  - Export respects the active filters
+```
+
+### Search Filter
+```text
+  - searchQuery state
+  - Filters table rows by matching description, category/source, or crop name
+  - Case-insensitive partial matching
+```
 
