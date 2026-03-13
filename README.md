@@ -14,12 +14,12 @@ To run this project locally:
 
 1. Clone the repository:
    ```bash
-   git clone <YOUR_GIT_URL>
+   git clone https://github.com/aazibtariq1/agri-track-thrive.git
    ```
 
 2. Navigate to the project directory:
    ```bash
-   cd tariqagri
+   cd agri-track-thrive
    ```
 
 3. Install the necessary dependencies:
