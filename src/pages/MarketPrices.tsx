@@ -72,7 +72,7 @@ const getMarketPrices = (): CropPrice[] => {
     {
       name: "Corn (Maize)",
       urdu_name: "مکئی",
-      price: smallVariation(2800), // Khanpur Mandi Feb 2026: PKR 2,600-3,000 per mand
+      price: smallVariation(2300), // Khanpur Mandi Feb 2026: PKR 1,980-2,630 per mand
       unit: "mand",
       change: Math.round((Math.random() - 0.5) * 50),
       change_percent: parseFloat(((Math.random() - 0.5) * 1.5).toFixed(2)),
@@ -82,7 +82,7 @@ const getMarketPrices = (): CropPrice[] => {
     {
       name: "Sugarcane",
       urdu_name: "گنا",
-      price: smallVariation(425), // Hamza Sugar Mill Feb 2026: PKR 390-460 per mand
+      price: smallVariation(460), // Hamza Sugar Mill Feb 2026: PKR 450-460 per mand
       unit: "mand",
       change: Math.round((Math.random() - 0.5) * 15),
       change_percent: parseFloat(((Math.random() - 0.5) * 0.8).toFixed(2)),

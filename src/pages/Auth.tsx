@@ -78,7 +78,7 @@ export default function Auth() {
 
         toast({
           title: "Account created!",
-          description: "Welcome to AgriManager. You can now start managing your farm.",
+          description: "Welcome to Agri Track Thrive. You can now start managing your farm.",
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -111,7 +111,7 @@ export default function Auth() {
         <CardHeader className="space-y-1 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
             <Sprout className="h-10 w-10 text-primary" />
-            <h1 className="text-3xl font-bold text-primary">AgriManager</h1>
+            <h1 className="text-3xl font-bold text-primary">Agri Track Thrive</h1>
           </div>
           <CardTitle className="text-2xl">{isSignUp ? "Create an account" : "Welcome back"}</CardTitle>
           <CardDescription>

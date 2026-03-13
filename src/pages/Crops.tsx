@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download } from "lucide-react";
+import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download, Scale, CheckCircle2 } from "lucide-react";
 import { exportToCSV } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,9 @@ export default function Crops() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState(INITIAL_FORM);
+  const [harvestOpen, setHarvestOpen] = useState(false);
+  const [harvestCropId, setHarvestCropId] = useState<string | null>(null);
+  const [actualYieldValue, setActualYieldValue] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -87,6 +90,13 @@ export default function Crops() {
     setFormData(INITIAL_FORM);
     setOpen(true);
   };
+
+  useEffect(() => {
+    if (!harvestOpen) {
+      setHarvestCropId(null);
+      setActualYieldValue("");
+    }
+  }, [harvestOpen]);
 
   const openEditDialog = (crop: Crop) => {
     setEditingId(crop.id);
@@ -166,6 +176,37 @@ export default function Crops() {
       loadCrops();
     } catch (error: any) {
       toast({ title: "Error deleting crop", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleRecordYield = async () => {
+    if (!harvestCropId || !actualYieldValue) return;
+
+    try {
+      const { error } = await supabase
+        .from("crops")
+        .update({ actual_yield: parseFloat(actualYieldValue), status: "harvested" })
+        .eq("id", harvestCropId);
+
+      if (error) throw error;
+
+      setCrops(crops.map(c =>
+        c.id === harvestCropId
+          ? { ...c, actual_yield: parseFloat(actualYieldValue), status: "harvested" }
+          : c
+      ));
+
+      toast({
+        title: "Harvest recorded",
+        description: `Actual yield has been saved successfully.`,
+      });
+      setHarvestOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error recording harvest",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -293,6 +334,33 @@ export default function Crops() {
               </form>
             </DialogContent>
           </Dialog>
+
+          <Dialog open={harvestOpen} onOpenChange={setHarvestOpen}>
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Record Harvest</DialogTitle>
+                <DialogDescription>
+                  Enter the actual yield obtained from this crop. The status will automatically be set to Harvested.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="actual_yield_record">Actual Yield (mands)</Label>
+                  <Input
+                    id="actual_yield_record"
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 150"
+                    value={actualYieldValue}
+                    onChange={(e) => setActualYieldValue(e.target.value)}
+                  />
+                </div>
+                <Button onClick={handleRecordYield} className="w-full">
+                  Save Harvest Data
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           </div>
         </div>
 
@@ -378,10 +446,38 @@ export default function Crops() {
                   )}
                   {crop.actual_yield && (
                     <div className="flex items-center text-sm">
-                      <TrendingUp className="mr-2 h-4 w-4 text-primary" />
-                      <span className="text-muted-foreground">Actual: </span>
+                      <Scale className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Actual Yield: </span>
                       <span className="ml-1 font-semibold">{crop.actual_yield} mands</span>
                     </div>
+                  )}
+                  {crop.expected_yield && crop.actual_yield && (
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Yield Efficiency</span>
+                        <span className="font-medium">{Math.round((crop.actual_yield / crop.expected_yield) * 100)}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${crop.actual_yield >= crop.expected_yield ? 'bg-green-500' : 'bg-amber-500'}`}
+                          style={{ width: `${Math.min(100, (crop.actual_yield / crop.expected_yield) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {(!crop.actual_yield && (crop.status === 'growing' || crop.status === 'harvested')) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-3"
+                      onClick={() => {
+                        setHarvestCropId(crop.id);
+                        setHarvestOpen(true);
+                      }}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Record Harvest
+                    </Button>
                   )}
                   {crop.market_price && (
                     <div className="flex items-center text-sm font-semibold text-primary">

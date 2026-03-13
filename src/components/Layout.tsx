@@ -47,7 +47,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sprout className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">AgriManager</h1>
+            <h1 className="text-2xl font-bold text-foreground">Agri Track Thrive</h1>
             {isOnline ? (
               <Wifi className="h-4 w-4 text-primary" />
             ) : (
