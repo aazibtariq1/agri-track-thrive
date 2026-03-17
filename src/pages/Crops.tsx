@@ -425,8 +425,18 @@ export default function Crops() {
             </CardContent>
           </Card>
         ) : (
+          <>
+            <Tabs value={durationFilter} onValueChange={(v) => setDurationFilter(v as DurationCategory)} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all">All ({crops.length})</TabsTrigger>
+                <TabsTrigger value="short">Short ≤3 mo ({crops.filter(c => getCropDuration(c.planting_date, c.harvest_date).category === "short").length})</TabsTrigger>
+                <TabsTrigger value="medium">Medium 3-6 mo ({crops.filter(c => getCropDuration(c.planting_date, c.harvest_date).category === "medium").length})</TabsTrigger>
+                <TabsTrigger value="long">Long 6+ mo ({crops.filter(c => getCropDuration(c.planting_date, c.harvest_date).category === "long").length})</TabsTrigger>
+              </TabsList>
+            </Tabs>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {crops.map((crop) => (
+            {filteredCrops.map((crop) => {
+              const duration = getCropDuration(crop.planting_date, crop.harvest_date);
               <Card key={crop.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
