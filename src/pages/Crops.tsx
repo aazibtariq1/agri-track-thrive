@@ -437,11 +437,18 @@ export default function Crops() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredCrops.map((crop) => {
               const duration = getCropDuration(crop.planting_date, crop.harvest_date);
+              return (
               <Card key={crop.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{crop.crop_name}</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        {crop.crop_name}
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${getDurationBadgeClass(duration.category)}`}>
+                          <Clock className="h-3 w-3" />
+                          {duration.label}
+                        </span>
+                      </CardTitle>
                       <CardDescription>{crop.crop_type}</CardDescription>
                     </div>
                     <div className="flex items-center gap-1">
@@ -534,8 +541,10 @@ export default function Crops() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
+          </>
         )}
       </div>
     </Layout>
