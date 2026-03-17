@@ -1,34 +1,102 @@
 
 
-## Plan: Organize Crops by Duration Category
+## Plan: Excel Export + Feature Improvements
+
+### Overview
+Add Excel/CSV export functionality across all data pages (Crops, Expenses, Income, Reports) and implement several improvements to make the app more reliable and user-friendly.
+
+---
+
+## Part 1: Excel/CSV Data Export
 
 ### What it does
-Adds a **crop duration category** system that automatically classifies crops based on the difference between planting date and harvest date (or expected harvest date). Crops are then displayed in grouped sections: **Short Season (up to 3 months)**, **Medium Season (3-6 months)**, and **Long Season (6-12+ months)**. A filter/tab lets you switch between viewing all crops or a specific duration group.
+Adds a "Download Excel" button on the Crops, Expenses, Income, and Reports pages. Clicking it exports all the user's data into a `.csv` file (which opens directly in Excel, Google Sheets, etc.) with proper column headers and formatted values.
 
-### How it works
+### Implementation
 
-**Duration Calculation:**
-- Computed from `planting_date` and `harvest_date` (if set). If no harvest date, uses today's date or shows as "Unknown".
-- Short: 0-3 months | Medium: 3-6 months | Long: 6+ months
+**New File: `src/lib/export-utils.ts`**
+- A utility with a `exportToCSV(filename, headers, rows)` function
+- Converts data arrays into CSV format with proper escaping (commas in descriptions, PKR values, etc.)
+- Triggers a browser download of the `.csv` file
+- No external library needed -- uses built-in browser APIs
 
-**UI Changes to `src/pages/Crops.tsx`:**
-1. Add a **Tabs bar** at the top: `All | Short Season (≤3 mo) | Medium Season (3-6 mo) | Long Season (6+ mo)`
-2. Each tab filters the crop grid accordingly
-3. Each crop card gets a small **duration badge** showing e.g. "3 mo" or "8 mo"
-4. Within each group, crops are sorted by planting date (newest first)
-5. Add a **"Crop Duration"** select field in the add/edit form with options: Short (≤3 months), Medium (3-6 months), Long (6+ months) -- this is auto-calculated from dates but can be used as a filter override
+**Changes to `src/pages/Crops.tsx`**
+- Add a "Download Excel" button next to "Add Crop"
+- Exports: Crop Name, Type, Status, Planting Date, Harvest Date, Expected Yield (mands), Actual Yield (mands), Market Price (PKR/mand), Notes
 
-**No database changes needed** -- duration is computed client-side from the existing `planting_date` and `harvest_date` columns.
+**Changes to `src/pages/Expenses.tsx`**
+- Add a "Download Excel" button next to "Add Expense"
+- Exports: Date, Category, Crop Name, Amount (PKR), Description
 
-### Files to modify
+**Changes to `src/pages/Income.tsx`**
+- Add a "Download Excel" button next to "Add Income"
+- Exports: Date, Source, Crop Name, Amount (PKR), Description
 
-| File | Change |
-|------|--------|
-| `src/pages/Crops.tsx` | Add duration calculation helper, Tabs component for filtering by duration, duration badge on cards |
+**Changes to `src/pages/Reports.tsx`**
+- Add a "Download Report" button
+- Exports the summary data (period, income, expenses, net profit)
 
-### Technical Details
-- Helper function: `getCropDuration(plantingDate, harvestDate)` returns `{ months: number, label: "Short Season" | "Medium Season" | "Long Season" }`
-- Uses Shadcn `Tabs` component for the filter UI
-- Filtered crops computed via `useMemo` based on active tab
-- Duration badge color: blue for short, amber for medium, green for long
+---
+
+## Part 2: Suggested Improvements (Will Be Implemented)
+
+### Improvement A: Date Range Filters on Expenses and Income
+Currently all records are shown without filtering. Add "From Date" and "To Date" filter inputs so farmers can view records for a specific season or month. The export will also respect these filters.
+
+### Improvement B: Dashboard Summary Cards Enhancement
+Add a "This Month" vs "Last Month" comparison showing percentage change arrows on the dashboard stat cards, so farmers can quickly see if they're doing better or worse.
+
+### Improvement C: Crop Financial Summary on Each Crop Card
+Show a quick summary on each crop card: total expenses spent on that crop, total income earned, and net profit/loss -- giving farmers an at-a-glance view of each crop's financial performance. (This may already exist via `CropFinancialCard` -- will enhance if needed.)
+
+### Improvement D: Search/Filter on Data Tables
+Add a search box above the Expenses and Income tables to quickly find records by description, category, or crop name.
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/lib/export-utils.ts` | CSV export utility function |
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/pages/Crops.tsx` | Add export button |
+| `src/pages/Expenses.tsx` | Add export button, date filters, search box |
+| `src/pages/Income.tsx` | Add export button, date filters, search box |
+| `src/pages/Reports.tsx` | Add export button |
+| `src/pages/Dashboard.tsx` | Add month-over-month comparison on stat cards |
+
+---
+
+## Technical Details
+
+### CSV Export Utility
+```text
+exportToCSV(filename, headers, rows)
+  - filename: "crops_2026-02-21.csv"
+  - headers: ["Date", "Category", "Amount (PKR)", ...]
+  - rows: [["2026-02-21", "Seeds", "5000.00", ...], ...]
+  - Handles: comma escaping, newline escaping, UTF-8 BOM for Excel compatibility
+  - Uses: Blob + URL.createObjectURL + anchor click download
+```
+
+### Date Filter State
+```text
+Expenses/Income pages will add:
+  - fromDate state (default: empty = show all)
+  - toDate state (default: empty = show all)
+  - Filtered data computed from the full dataset
+  - Export respects the active filters
+```
+
+### Search Filter
+```text
+  - searchQuery state
+  - Filters table rows by matching description, category/source, or crop name
+  - Case-insensitive partial matching
+```
 

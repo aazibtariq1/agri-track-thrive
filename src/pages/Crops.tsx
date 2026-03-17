@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cropSchema, formatValidationError } from "@/lib/validation-schemas";
@@ -11,11 +11,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download, Scale, CheckCircle2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download, Scale, CheckCircle2, Clock } from "lucide-react";
 import { exportToCSV } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import CropFinancialCard from "@/components/CropFinancialCard";
+
+type DurationCategory = "all" | "short" | "medium" | "long";
+
+function getCropDuration(plantingDate: string, harvestDate: string | null): { months: number; label: string; category: DurationCategory } {
+  const start = new Date(plantingDate);
+  const end = harvestDate ? new Date(harvestDate) : new Date();
+  const diffMs = end.getTime() - start.getTime();
+  const months = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
+
+  if (months <= 3) return { months, label: `${months} mo`, category: "short" };
+  if (months <= 6) return { months, label: `${months} mo`, category: "medium" };
+  return { months, label: `${months} mo`, category: "long" };
+}
+
+function getDurationBadgeClass(category: DurationCategory): string {
+  switch (category) {
+    case "short": return "bg-blue-100 text-blue-700 border-blue-200";
+    case "medium": return "bg-amber-100 text-amber-700 border-amber-200";
+    case "long": return "bg-green-100 text-green-700 border-green-200";
+    default: return "";
+  }
+}
 
 interface Crop {
   id: string;
@@ -54,8 +77,17 @@ export default function Crops() {
   const [harvestOpen, setHarvestOpen] = useState(false);
   const [harvestCropId, setHarvestCropId] = useState<string | null>(null);
   const [actualYieldValue, setActualYieldValue] = useState("");
+  const [durationFilter, setDurationFilter] = useState<DurationCategory>("all");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const filteredCrops = useMemo(() => {
+    if (durationFilter === "all") return crops;
+    return crops.filter((crop) => {
+      const { category } = getCropDuration(crop.planting_date, crop.harvest_date);
+      return category === durationFilter;
+    });
+  }, [crops, durationFilter]);
 
   useEffect(() => {
     checkAuth();
@@ -393,13 +425,30 @@ export default function Crops() {
             </CardContent>
           </Card>
         ) : (
+          <>
+            <Tabs value={durationFilter} onValueChange={(v) => setDurationFilter(v as DurationCategory)} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all">All ({crops.length})</TabsTrigger>
+                <TabsTrigger value="short">Short ≤3 mo ({crops.filter(c => getCropDuration(c.planting_date, c.harvest_date).category === "short").length})</TabsTrigger>
+                <TabsTrigger value="medium">Medium 3-6 mo ({crops.filter(c => getCropDuration(c.planting_date, c.harvest_date).category === "medium").length})</TabsTrigger>
+                <TabsTrigger value="long">Long 6+ mo ({crops.filter(c => getCropDuration(c.planting_date, c.harvest_date).category === "long").length})</TabsTrigger>
+              </TabsList>
+            </Tabs>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {crops.map((crop) => (
+            {filteredCrops.map((crop) => {
+              const duration = getCropDuration(crop.planting_date, crop.harvest_date);
+              return (
               <Card key={crop.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{crop.crop_name}</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        {crop.crop_name}
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${getDurationBadgeClass(duration.category)}`}>
+                          <Clock className="h-3 w-3" />
+                          {duration.label}
+                        </span>
+                      </CardTitle>
                       <CardDescription>{crop.crop_type}</CardDescription>
                     </div>
                     <div className="flex items-center gap-1">
@@ -492,8 +541,10 @@ export default function Crops() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
+          </>
         )}
       </div>
     </Layout>
