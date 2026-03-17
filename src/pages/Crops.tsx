@@ -77,8 +77,17 @@ export default function Crops() {
   const [harvestOpen, setHarvestOpen] = useState(false);
   const [harvestCropId, setHarvestCropId] = useState<string | null>(null);
   const [actualYieldValue, setActualYieldValue] = useState("");
+  const [durationFilter, setDurationFilter] = useState<DurationCategory>("all");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const filteredCrops = useMemo(() => {
+    if (durationFilter === "all") return crops;
+    return crops.filter((crop) => {
+      const { category } = getCropDuration(crop.planting_date, crop.harvest_date);
+      return category === durationFilter;
+    });
+  }, [crops, durationFilter]);
 
   useEffect(() => {
     checkAuth();
