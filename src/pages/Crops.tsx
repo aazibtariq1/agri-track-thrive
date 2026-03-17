@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { cropSchema, formatValidationError } from "@/lib/validation-schemas";
@@ -11,11 +11,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download, Scale, CheckCircle2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Calendar, TrendingUp, Pencil, Trash2, Download, Scale, CheckCircle2, Clock } from "lucide-react";
 import { exportToCSV } from "@/lib/export-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import CropFinancialCard from "@/components/CropFinancialCard";
+
+type DurationCategory = "all" | "short" | "medium" | "long";
+
+function getCropDuration(plantingDate: string, harvestDate: string | null): { months: number; label: string; category: DurationCategory } {
+  const start = new Date(plantingDate);
+  const end = harvestDate ? new Date(harvestDate) : new Date();
+  const diffMs = end.getTime() - start.getTime();
+  const months = Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
+
+  if (months <= 3) return { months, label: `${months} mo`, category: "short" };
+  if (months <= 6) return { months, label: `${months} mo`, category: "medium" };
+  return { months, label: `${months} mo`, category: "long" };
+}
+
+function getDurationBadgeClass(category: DurationCategory): string {
+  switch (category) {
+    case "short": return "bg-blue-100 text-blue-700 border-blue-200";
+    case "medium": return "bg-amber-100 text-amber-700 border-amber-200";
+    case "long": return "bg-green-100 text-green-700 border-green-200";
+    default: return "";
+  }
+}
 
 interface Crop {
   id: string;
